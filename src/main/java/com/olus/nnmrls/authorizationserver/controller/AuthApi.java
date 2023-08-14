@@ -18,6 +18,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.Instant;
@@ -35,14 +36,22 @@ import static java.util.stream.Collectors.joining;
 @RequiredArgsConstructor
 public class AuthApi {
     public static final String BEARER = "Bearer";
-    private static final Long EXPIRY = 36000L;
     public static final String BASIC_ = "Basic ";
+    public static final String CLIENT_CREDENTIALS_GT = "client_credentials";
+    static final Integer EXPIRY = 36000;
     private final AuthenticationManager authenticationManager;
     private final JwtEncoder jwtEncoder;
 
     @PostMapping("/token")
-    public ResponseEntity<TokenResponse> login(@RequestHeader("Authorization") @Valid String authorization) {
+    public ResponseEntity<TokenResponse> login(@RequestHeader("Authorization") @Valid String authorization,
+                                               @RequestParam("grant_type") String grantType) {
         try {
+            if (!CLIENT_CREDENTIALS_GT.equals(grantType)) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(TokenResponse.builder()
+                                .errorMsg("Unsupported grant type")
+                                .build());
+            }
             if (!StringUtils.hasText(authorization) || !authorization.startsWith(BASIC_)) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
             }
@@ -55,7 +64,7 @@ public class AuthApi {
                             new UsernamePasswordAuthenticationToken(clientId, clientSecret));
             var user = (User) authentication.getPrincipal();
             var now = Instant.now();
-            var scope = authentication.getAuthorities().stream()
+            var scope = user.getAuthorities().stream()
                     .map(GrantedAuthority::getAuthority)
                     .collect(joining(" "));
             var claims =
