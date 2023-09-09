@@ -1,5 +1,10 @@
 # Authorization server
 
+## Authorization
+Currenlty, it is for client based authorization.
+Client can have roles.
+Client make request to get access token (JWT)
+
 ## Users
 
 Currently, you need to put users into `users.json`.
