@@ -1,8 +1,12 @@
 # Authorization server
+This is just an example for authorization server that provides api to get access key (JWT)
+
 
 ## Authorization
 Currenlty, it is for client based authorization.
+
 Client can have roles.
+
 Client make request to get access token (JWT)
 
 ## Users
